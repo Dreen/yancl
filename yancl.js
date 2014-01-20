@@ -1,6 +1,7 @@
 var jsdom = require('./node_modules/jquery-loader/node_modules/jsdom').jsdom;
 var jquery = require('jquery-loader');
 var http = require('http');
+var https = require('https');
 
 function jquerify(html)
 {
@@ -14,8 +15,30 @@ function jquerify(html)
 	};
 }
 
-function test()
+function YANCL ()
 {
+
+}
+YANCL.prototype.postproc = [];
+YANCL.prototype.preproc = [];
+YANCL.prototype.procadd = function(type, proc)
+{
+	if (typeof proc == 'function')
+	{
+		this[type + 'proc'].push(proc);
+	}
+}
+YANCL.prototype.process = function(type, data)
+{
+	var processors = this[type + 'proc'];
+	for (p in processors)
+	{
+		data = processors[p].call(this, data);
+	}
+	return data;
+}
+YANCL.prototype.go = function(reqOpts)
+{/*
 	http.get('http://m.countdown.tfl.gov.uk/arrivals/48704', function(res)
 	{
 		res.setEncoding('utf8');
@@ -35,7 +58,5 @@ function test()
 			var d = c.attr('src');
 			console.log(d);
 		});
-	});
+	});*/
 }
-
-test();
