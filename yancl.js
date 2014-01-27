@@ -1,7 +1,7 @@
-var jsdom = require('./node_modules/jquery-loader/node_modules/jsdom').jsdom;
-var jquery = require('jquery-loader');
-var http = require('http');
-var https = require('https');
+var jsdom = require('./node_modules/jquery-loader/node_modules/jsdom').jsdom,
+	jquery = require('jquery-loader'),
+	http = require('http'),
+	https = require('https');
 
 function jquerify(html)
 {
@@ -15,17 +15,16 @@ function jquerify(html)
 	};
 }
 
-/**
-headers = {};
-body = null; // need underscore method for checking
-url = "";
-method = "GET";
-*/
 function Yancl (extension)
 {
+	this.headers = {};
+	this.body = null;
+	this.url = null; // need underscore method for checking
+	this.method = 'GET';
+
 	for (k in extension)
 	{
-		console.log('ext[%j] = %j', k, extension[k]);
+		console.log('ext[%j] = %j', k, extension[k]); //debug
 		this[k] = extension[k];
 	}
 	this._insted = true;
@@ -53,19 +52,6 @@ Yancl.prototype._process = function(type, data)
 	return data;
 }
 
-//// create instance
-//function _spawn(extension)
-//{
-//	//for (k in this)
-//	//{
-//	//	if (typeof this[k] != 'function' && typeof extension[k] != 'undefined')
-//	//	{
-//	//		extension[k] = this[k];
-//	//	}
-//	//}
-//	return new Yancl(extension);
-//}
-
 // configure by methods
 function _method(m)
 {
@@ -84,6 +70,55 @@ Yancl.patch = _method('PATCH');
 Yancl.delete = _method('DELETE');
 Yancl.head = _method('HEAD');
 Yancl.options = _method('OPTIONS');
+
+// headers
+Yancl.prototype.setHeader = function(k, v)
+{
+	this.headers[k] = v;
+	return this;
+};
+
+// MIME
+Yancl.MIME = {
+	JSON: 'application/json'
+	// TODO add rest
+};
+Yancl.prototype.expectsType = function(t)
+{
+	if (t in Yancl.MIME)
+	{
+		return this.setHeader('Accept', Yancl.MIME[t]);
+	}
+	else
+	{
+		// TODO error
+		return this;	
+	}
+};
+Yancl.prototype.sendsType = function(t)
+{
+	if (t in Yancl.MIME)
+	{
+		this.setHeader('Content-Type', Yancl.MIME[t]);
+	}
+	else
+	{
+		// TODO error
+		return this;	
+	}
+};
+for (t in Yancl.MIME)
+{
+	var type = t;
+	Yancl.prototype['expects' + t] = function()
+	{
+		return this.expectsType(type);
+	};
+	Yancl.prototype['sends' + t] = function()
+	{
+		return this.sendsType(type);
+	};
+}
 
 module.exports = Yancl;
 
